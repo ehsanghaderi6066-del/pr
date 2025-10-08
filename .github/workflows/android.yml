@@ -13,7 +13,6 @@ jobs:
     env:
       ANDROID_SDK_ROOT: /usr/local/lib/android
       ANDROID_HOME: /usr/local/lib/android
-      JAVA_HOME_17_X64: /usr/lib/jvm/temurin-17-jdk-amd64
 
     steps:
       - name: Checkout
@@ -25,24 +24,27 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      # نصب دستی commandline-tools و افزودن به PATH
+      # نصب دستی cmdline-tools و ساخت ساختار صحیح .../cmdline-tools/latest/...
       - name: Install Android commandline tools
         run: |
           sudo mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
           sudo curl -L -o cmdtools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          sudo unzip -q cmdtools.zip -d latest
+          sudo unzip -q cmdtools.zip
+          sudo rm -f cmdtools.zip
+          # بعد از unzip، پوشه‌ای به نام cmdline-tools ساخته می‌شود؛ آن را به latest منتقل می‌کنیم
+          sudo mv cmdline-tools latest
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
       - name: Accept Android licenses
-        run: yes | sdkmanager --licenses
+        run: yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses
 
       - name: Install required SDK packages
         run: |
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-      # چون gradlew داخل ریپو نداریم، Gradle را جدا نصب می‌کنیم
+      # چون gradlew نداریم، Gradle را جدا نصب می‌کنیم
       - name: Install Gradle via SDKMAN
         run: |
           curl -s "https://get.sdkman.io" | bash
