@@ -20,14 +20,20 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Install Android SDK
+      # نصب SDK به همراه cmdline-tools و پذیرش لایسنس‌ها
+      - name: Install Android SDK (with cmdline-tools)
         uses: android-actions/setup-android@v3
         with:
           packages: |
-            build-tools;34.0.0
-            platforms;android-34
+            cmdline-tools;latest
             platform-tools
+            platforms;android-34
+            build-tools;34.0.0
 
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses
+
+      # نصب Gradle (چون فعلاً gradlew در ریپو نداریم)
       - name: Install Gradle via SDKMAN
         run: |
           curl -s "https://get.sdkman.io" | bash
@@ -35,10 +41,11 @@ jobs:
           sdk install gradle 8.7
           gradle --version
 
+      # بیلد APK
       - name: Build Debug APK
-        run: |
-          gradle assembleDebug
+        run: gradle assembleDebug
 
+      # آپلود خروجی APK به‌عنوان Artifact
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
